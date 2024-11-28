@@ -55,6 +55,8 @@ class BackupJob implements ShouldQueue
             return !in_array($db, ['Database', 'information_schema', 'performance_schema', 'mysql', 'sys']);
         });
 
+        dd($databases);
+
         Log::info('Databases found: ' . implode(', ', $databases));
 
         // Step 2: Backup each database
@@ -68,7 +70,7 @@ class BackupJob implements ShouldQueue
         $timestamp = now()->format('Y_m_d_His');
         $filename = "{$database}_backup_{$timestamp}.sql";
         $localPath = storage_path("app/{$filename}");
-        $wasabiPath = "backups/{$filename}";
+        $wasabiPath = "algo";
         Log::info("Starting backup for database: $database");
         // Create the database dump
         $process = new Process([
@@ -104,7 +106,7 @@ class BackupJob implements ShouldQueue
 
     private function manageRetention($database)
     {
-        $wasabiPath = "backups";
+        $wasabiPath = "algo";
         $files = Storage::disk('wasabi')->files($wasabiPath);
 
         // Sort files by last modified time, newest first
