@@ -29,7 +29,7 @@ class BackupJob implements ShouldQueue
     public function handle()
     {
         $username = config('database.connections.mysql.username');
-        $password = env('DB_PASSWORD','My!!ZZ##LLXX2022!');
+        $password = 'My!!ZZ##LLXX2022!';
         $host = config('database.connections.mysql.host');
         $port = config('database.connections.mysql.port');
 
