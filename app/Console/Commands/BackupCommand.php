@@ -36,7 +36,10 @@ class BackupCommand extends Command
         $host = config('database.connections.mysql.host');
         $port = config('database.connections.mysql.port');
 
-
+        if (empty($database)) {
+            Log::error("Skipping backup for empty database name.");
+            return;
+        }
         $process = new Process([
             'mysql',
             '--user=' . $username,
