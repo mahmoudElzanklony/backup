@@ -6,6 +6,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
@@ -53,6 +54,8 @@ class BackupJob implements ShouldQueue
             return !in_array($db, ['Database', 'information_schema', 'performance_schema', 'mysql', 'sys']);
         });
 
+        Log::info('Databases found: ' . implode(', ', $databases));
+
         // Step 2: Backup each database
         foreach ($databases as $database) {
             $this->backupDatabase($database, $username, $password, $host, $port);
@@ -65,7 +68,7 @@ class BackupJob implements ShouldQueue
         $filename = "{$database}_backup_{$timestamp}.sql";
         $localPath = storage_path("app/{$filename}");
         $wasabiPath = "backups/{$filename}";
-
+        Log::info("Starting backup for database: $database");
         // Create the database dump
         $process = new Process([
             'mysqldump',
@@ -84,9 +87,11 @@ class BackupJob implements ShouldQueue
         }
 
         file_put_contents($localPath, $process->getOutput());
+        Log::info("Backup saved locally: $localPath");
 
         // Upload to Wasabi
         Storage::disk('wasabi')->put($wasabiPath, file_get_contents($localPath));
+        Log::info("Backup uploaded to Wasabi: $wasabiPath");
 
         // Optional: Delete the local file after upload
         unlink($localPath);
