@@ -55,7 +55,7 @@ class BackupJob implements ShouldQueue
             return !in_array($db, ['Database', 'information_schema', 'performance_schema', 'mysql', 'sys']);
         });
 
-        dd($databases);
+
 
         Log::info('Databases found: ' . implode(', ', $databases));
 
