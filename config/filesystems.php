@@ -57,11 +57,11 @@ return [
         ],
         'wasabi' => [
             'driver' => 's3',
-            'key' => env('WASABI_KEY'),
-            'secret' => env('WASABI_SECRET'),
-            'region' => env('WASABI_REGION'),
-            'bucket' => env('WASABI_BUCKET'),
-            'endpoint' => env('WASABI_ENDPOINT'),
+            'key' => env('WAS_ACCESS_KEY_ID'),
+            'secret' => env('WAS_SECRET_ACCESS_KEY'),
+            'region' => env('WAS_DEFAULT_REGION', 'eu-central-1'),
+            'bucket' => env('WAS_BUCKET'),
+            'endpoint' => env('WAS_ENDPOINT', 'https://s3.us-west-1.wasabisys.com/'),
         ],
 
     ],
