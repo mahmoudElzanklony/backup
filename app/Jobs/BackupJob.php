@@ -90,8 +90,7 @@ class BackupJob implements ShouldQueue
         file_put_contents($localPath, $process->getOutput());
         Log::info("Backup saved locally: $localPath");
 
-        $files = Storage::disk('wasabi')->files();
-        dd($files);
+
         // Upload to Wasabi
         Storage::disk('wasabi')->put($wasabiPath, file_get_contents($localPath));
         Log::info("Backup uploaded to Wasabi: $wasabiPath");
