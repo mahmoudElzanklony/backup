@@ -26,6 +26,11 @@ class BackupCommand extends Command
      */
     public function handle()
     {
+        $this->info('Starting the database backup process...');
+
         dispatch(new BackupJob());
+
+        $this->info('ending the database backup process...');
+
     }
 }
