@@ -58,24 +58,17 @@ class BackupCommand extends Command
             return !in_array($db, ['Database', 'information_schema', 'performance_schema', 'mysql', 'sys']);
         });
 
-        Log::info('Databases found: ' . implode(', ', $databases));
 
         // Step 2: Backup each database
         foreach ($databases as $database) {
             $this->backupDatabase($database, $username, $password, $host, $port);
         }
 
-        Log::info('Databases found: ' . implode(', ', $databases));
-        Storage::disk('wasabi')->put('testfile.txt', 'This is a test file');
-
         // Step 2: Backup each database
         foreach ($databases as $database) {
             $this->backupDatabase($database, $username, $password, $host, $port);
         }
-        dd($databases);
-        dispatch(new BackupJob());
-        $this->info(env('DB_PASSWORD'));
-        $this->info('ending the database backup process...');
+
 
     }
 
@@ -103,8 +96,6 @@ class BackupCommand extends Command
 
         $this->info("Running mysqldump command: mysqldump --user={$username} --password={$password} --host={$host} --port={$port} --databases {$database}");
 
-
-        //$process->setTimeout(3600);
         $process->run();
 
         if (!$process->isSuccessful()) {
@@ -143,5 +134,6 @@ class BackupCommand extends Command
         // Step 3: Manage backups retention
         // $this->manageRetention($database);
     }
+
 
 }
