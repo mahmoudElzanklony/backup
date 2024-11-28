@@ -1,13 +1,30 @@
 <?php
-
 namespace App\Jobs;
 
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
-class BackupJob extends Job
+class BackupDbJob implements ShouldQueue
 {
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    /**
+     * Create a new job instance.
+     */
+    public function __construct()
+    {
+        //
+    }
+
+    /**
+     * Execute the job.
+     */
     public function handle()
     {
         $username = config('database.connections.mysql.username');
@@ -75,7 +92,7 @@ class BackupJob extends Job
         unlink($localPath);
 
         // Step 3: Manage backups retention
-       // $this->manageRetention($database);
+        // $this->manageRetention($database);
     }
 
     private function manageRetention($database)
@@ -93,4 +110,5 @@ class BackupJob extends Job
             Storage::disk('wasabi')->delete($file);
         }
     }
+
 }
