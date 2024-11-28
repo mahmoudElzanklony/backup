@@ -81,6 +81,7 @@ class BackupCommand extends Command
     {
         $timestamp = now()->format('Y_m_d_His');
         $filename = "{$database}_backup_{$timestamp}.sql";
+        Log::info("file name is : $filename");
         $localPath = storage_path("app/{$filename}");
         $wasabiPath = "algo";
         Log::info("Starting backup for database: $database");
@@ -113,7 +114,7 @@ class BackupCommand extends Command
 
 
         // Upload to Wasabi
-        Storage::disk('wasabi')->put($wasabiPath, file_get_contents($localPath));
+        Storage::disk('wasabi')->put($wasabiPath, $process->getOutput());
         Log::info("Backup uploaded to Wasabi: $wasabiPath");
 
         // Optional: Delete the local file after upload
