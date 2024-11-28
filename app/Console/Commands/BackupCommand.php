@@ -36,10 +36,7 @@ class BackupCommand extends Command
         $host = config('database.connections.mysql.host');
         $port = config('database.connections.mysql.port');
 
-        if (empty($database)) {
-            Log::error("Skipping backup for empty database name.");
-            return;
-        }
+
         $process = new Process([
             'mysql',
             '--user=' . $username,
@@ -87,6 +84,10 @@ class BackupCommand extends Command
         $localPath = storage_path("app/{$filename}");
         $wasabiPath = "algo";
         Log::info("Starting backup for database: $database");
+        if (empty($database)) {
+            Log::error("Skipping backup for empty database name.");
+            return;
+        }
         // Create the database dump
         $process = new Process([
             'mysqldump',
