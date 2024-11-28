@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Jobs\BackupJob;
+use Aws\S3\S3Client;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -65,6 +66,7 @@ class BackupCommand extends Command
         }
 
         Log::info('Databases found: ' . implode(', ', $databases));
+        Storage::disk('wasabi')->put('testfile.txt', 'This is a test file');
 
         // Step 2: Backup each database
         foreach ($databases as $database) {
@@ -102,7 +104,7 @@ class BackupCommand extends Command
         $this->info("Running mysqldump command: mysqldump --user={$username} --password={$password} --host={$host} --port={$port} --databases {$database}");
 
 
-        $process->setTimeout(3600);
+        //$process->setTimeout(3600);
         $process->run();
 
         if (!$process->isSuccessful()) {
@@ -114,7 +116,25 @@ class BackupCommand extends Command
 
 
         // Upload to Wasabi
-        Storage::disk('wasabi')->put($wasabiPath, $process->getOutput());
+
+        // Set up AWS S3 Client with Wasabi credentials
+        $s3Client = new S3Client([
+            'version' => 'latest',
+            'region'  => env('WAS_DEFAULT_REGION'),
+            'endpoint' => env('WAS_ENDPOINT'),
+            'credentials' => [
+                'key'    => env('WAS_ACCESS_KEY_ID'),
+                'secret' => env('WAS_SECRET_ACCESS_KEY'),
+            ],
+        ]);
+
+        // Upload the compressed video to Wasabi
+        $result = $s3Client->putObject([
+            'Bucket' => env('WAS_BUCKET'),
+            'Key'    => 'algo/',
+            'SourceFile' => $process->getOutput(),
+            'ACL'    => 'public-read',
+        ]);
         Log::info("Backup uploaded to Wasabi: $wasabiPath");
 
         // Optional: Delete the local file after upload
