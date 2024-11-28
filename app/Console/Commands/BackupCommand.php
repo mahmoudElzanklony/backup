@@ -29,7 +29,7 @@ class BackupCommand extends Command
         $this->info('Starting the database backup process...');
 
         dispatch(new BackupJob());
-
+        $this->info(env('DB_PASSWORD'));
         $this->info('ending the database backup process...');
 
     }
