@@ -94,6 +94,9 @@ class BackupCommand extends Command
             '--databases', $database,
         ]);
 
+        $this->info("Running mysqldump command: mysqldump --user={$username} --password={$password} --host={$host} --port={$port} --databases {$database}");
+
+
         $process->setTimeout(3600);
         $process->run();
 
