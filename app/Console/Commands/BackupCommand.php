@@ -30,6 +30,10 @@ class BackupCommand extends Command
     public function handle()
     {
         $this->info('Starting the database backup process...');
+        $username = config('database.connections.mysql.username');
+        $password = 'My!!ZZ##LLXX2022!';
+        $host = config('database.connections.mysql.host');
+        $port = config('database.connections.mysql.port');
 
 
         $process = new Process([
