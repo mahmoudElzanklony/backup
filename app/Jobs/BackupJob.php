@@ -33,6 +33,8 @@ class BackupJob implements ShouldQueue
         $host = config('database.connections.mysql.host');
         $port = config('database.connections.mysql.port');
 
+        var_dump($password);
+
         // Step 1: List all databases
         $process = new Process([
             'mysql',
