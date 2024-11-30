@@ -94,17 +94,17 @@ class BackupCommand extends Command
             '--port=' . $port,
             '--default-character-set=utf8mb4', // Ensures compatible charset
             '--databases', $database,          // Database to dump
-            '--add-drop-database',            // Drop database if exists
-            '--add-drop-table',               // Drop tables before creating them
-            '--add-locks',                    // Add locks for faster inserts
-            '--routines',                     // Include stored procedures and functions
-            '--events',                       // Include events
-            '--triggers',                     // Include triggers
-            '--complete-insert',              // Use complete insert syntax
-            '--extended-insert',              // Combine multiple rows in one INSERT statement
-            '--no-set-names',                 // Prevents adding `SET NAMES` for character set
+            '--no-create-db',                  // Don't include CREATE DATABASE statement
+            '--no-set-names',                  // Avoid setting names and charsets at the beginning
+            '--skip-comments',                 // Don't include comments
+            '--add-drop-table',                // Drop tables if they already exist
+            '--add-locks',                     // Add table locks for faster inserts
+            '--routines',                      // Include stored procedures and functions
+            '--events',                        // Include events
+            '--triggers',                      // Include triggers
+            '--complete-insert',               // Use complete insert syntax (INSERT INTO ... VALUES (...), (...))
+            '--extended-insert',               // Use extended inserts (one insert with multiple rows)
         ]);
-
         try {
             $process->run();
 
