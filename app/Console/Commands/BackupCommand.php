@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Exception;
+use Spatie\DbDumper\Databases\MySql;
 use Spatie\DbDumper\DbDumper;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
@@ -89,7 +90,7 @@ class BackupCommand extends Command
 
         // Create a backup file using spatie/db-dumper
 
-        DbDumper::create()
+        MySql::create()
             ->setDbName($database)
             ->setUserName($username)
             ->setPassword($password)
