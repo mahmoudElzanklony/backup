@@ -36,7 +36,7 @@ class BackupCommand extends Command
     {
         $this->info('Starting the database backup process...');
         $username = config('database.connections.mysql.username');
-        $password = 'My!!ZZ##LLXX2022!';
+        $password = env('DB_PASSWORD');
         $host = config('database.connections.mysql.host');
         $port = config('database.connections.mysql.port');
 
@@ -81,7 +81,6 @@ class BackupCommand extends Command
         $filename = "{$database}_backup_{$timestamp}.sql";
         Log::info("file name is : $filename");
         $localPath = storage_path("app/{$filename}");
-        $wasabiPath = "algo";
         Log::info("Starting backup for database: $database");
         if (empty($database)) {
             Log::error("Skipping backup for empty database name.");
