@@ -84,7 +84,7 @@ class BackupCommand extends Command
             Log::error("Skipping backup for empty database name.");
             return;
         }
-        // Create the database dump
+
         $process = new Process([
             'mysqldump',
             '--user=' . $username,
@@ -92,22 +92,56 @@ class BackupCommand extends Command
             '--host=' . $host,
             '--port=' . $port,
             '--default-character-set=utf8mb4', // Ensures compatible charset
-            '--databases', $database,
-            '--no-create-info', // Exclude schema (table structure), only include data
-            '--add-locks',      // Add locks for faster inserts
-            '--complete-insert', // Include complete column list in INSERT statements
-            '--extended-insert', // Combine multiple rows into one INSERT statement
+            '--databases', $database,          // Database to dump
+            '--add-drop-database',            // Drop database if exists
+            '--add-drop-table',               // Drop tables before creating them
+            '--add-locks',                    // Add locks for faster inserts
+            '--routines',                     // Include stored procedures and functions
+            '--events',                       // Include events
+            '--triggers',                     // Include triggers
+            '--complete-insert',              // Use complete insert syntax
+            '--extended-insert',              // Combine multiple rows in one INSERT statement
+            '--no-set-names',                 // Prevents adding `SET NAMES` for character set
         ]);
 
-        $this->info("Running mysqldump command: mysqldump --user={$username} --password={$password} --host={$host} --port={$port} --databases {$database}");
+        try {
+            $process->run();
 
-        $process->run();
+            if (!$process->isSuccessful()) {
+                throw new ProcessFailedException($process);
+            }
 
-        if (!$process->isSuccessful()) {
-            throw new ProcessFailedException($process);
-        }
+            // Capture the output of the mysqldump process
+            $output = $process->getOutput();
 
-        file_put_contents($localPath, $process->getOutput());
+            // Step 1: Add the necessary SQL modes and transaction settings at the beginning of the SQL dump
+            $output = "SET SQL_MODE = \"NO_AUTO_VALUE_ON_ZERO\";\n";
+            $output .= "START TRANSACTION;\n";
+            $output .= "SET time_zone = \"+00:00\";\n\n";
+            $output .= $process->getOutput(); // Append mysqldump output after the custom settings
+
+            // Step 2: Process the dump to move foreign keys to the end of the SQL file
+            // Regular expression to find the foreign keys and move them to the end
+            $foreignKeyPattern = '/CONSTRAINT.*?FOREIGN KEY.*?REFERENCES.*?;/s';
+            $foreignKeys = [];
+            $output = preg_replace_callback($foreignKeyPattern, function ($matches) use (&$foreignKeys) {
+                // Collect foreign keys in an array to be added later
+                $foreignKeys[] = $matches[0];
+                return ''; // Remove foreign keys from the main output
+            }, $output);
+
+            // Step 3: Append the foreign key constraints at the end of the SQL dump file
+            if (!empty($foreignKeys)) {
+                $output .= "\n-- Adding foreign keys at the end\n";
+                foreach ($foreignKeys as $fk) {
+                    $output .= $fk . "\n";
+                }
+            }
+
+            // Step 4: Save the final SQL output to a file
+            file_put_contents($localPath, $output);
+
+        // Create the database dump
         Log::info("Backup saved locally: $localPath");
 
 
