@@ -92,18 +92,17 @@ class BackupCommand extends Command
             '--host=' . $host,
             '--port=' . $port,
             '--databases', $database,
-            '--add-drop-database',     // Drop the database if it exists
-            '--add-drop-table',        // Drop tables before creating them
-            '--add-locks',             // Add locks for faster inserts
-            '--routines',              // Include stored procedures and functions
-            '--events',                // Include database events
-            '--triggers',              // Include table triggers
-            '--set-gtid-purged=OFF',   // Ensure compatibility with replication setups
-            '--disable-keys',          // Improve dump file speed with keys disabled
-            '--complete-insert',       // Include complete insert syntax
-            '--extended-insert',       // Combine multiple rows into one INSERT statement
-            '--set-foreign-key-checks=0', // Disable foreign key checks
+            '--add-drop-database',
+            '--add-drop-table',
+            '--add-locks',
+            '--routines',
+            '--events',
+            '--triggers',
+            '--set-gtid-purged=OFF',
+            '--complete-insert',
+            '--extended-insert',
         ]);
+
 
         $this->info("Running mysqldump command: mysqldump --user={$username} --password={$password} --host={$host} --port={$port} --databases {$database}");
 
