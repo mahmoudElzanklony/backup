@@ -93,15 +93,10 @@ class BackupCommand extends Command
             '--port=' . $port,
             '--default-character-set=utf8mb4', // Ensures compatible charset
             '--databases', $database,
-            '--add-drop-database',
-            '--add-drop-table',
-            '--add-locks',
-            '--routines',
-            '--events',
-            '--triggers',
-            '--set-gtid-purged=OFF',
-            '--complete-insert',
-            '--extended-insert',
+            '--no-create-info', // Exclude schema (table structure), only include data
+            '--add-locks',      // Add locks for faster inserts
+            '--complete-insert', // Include complete column list in INSERT statements
+            '--extended-insert', // Combine multiple rows into one INSERT statement
         ]);
 
         $this->info("Running mysqldump command: mysqldump --user={$username} --password={$password} --host={$host} --port={$port} --databases {$database}");
