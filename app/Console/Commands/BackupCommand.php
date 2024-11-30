@@ -67,12 +67,6 @@ class BackupCommand extends Command
             $this->backupDatabase($database, $username, $password, $host, $port);
         }
 
-        // Step 2: Backup each database
-        foreach ($databases as $database) {
-            $this->backupDatabase($database, $username, $password, $host, $port);
-        }
-
-
     }
 
     private function backupDatabase($database, $username, $password, $host, $port)
