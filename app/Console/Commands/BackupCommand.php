@@ -7,6 +7,7 @@ use Aws\S3\S3Client;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Exception;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
@@ -141,34 +142,35 @@ class BackupCommand extends Command
             // Step 4: Save the final SQL output to a file
             file_put_contents($localPath, $output);
 
-        // Create the database dump
-        Log::info("Backup saved locally: $localPath");
+            // Create the database dump
+            Log::info("Backup saved locally: $localPath");
 
 
-        // Upload to Wasabi
+            // Upload to Wasabi
 
-        // Set up AWS S3 Client with Wasabi credentials
-        $s3Client = new S3Client([
-            'version' => 'latest',
-            'region'  => env('WAS_DEFAULT_REGION'),
-            'endpoint' => env('WAS_ENDPOINT'),
-            'credentials' => [
-                'key'    => env('WAS_ACCESS_KEY_ID'),
-                'secret' => env('WAS_SECRET_ACCESS_KEY'),
-            ],
-        ]);
+            // Set up AWS S3 Client with Wasabi credentials
+            $s3Client = new S3Client([
+                'version' => 'latest',
+                'region' => env('WAS_DEFAULT_REGION'),
+                'endpoint' => env('WAS_ENDPOINT'),
+                'credentials' => [
+                    'key' => env('WAS_ACCESS_KEY_ID'),
+                    'secret' => env('WAS_SECRET_ACCESS_KEY'),
+                ],
+            ]);
 
-        // Upload the compressed video to Wasabi
-        $result = $s3Client->putObject([
-            'Bucket' => env('WAS_BUCKET'),
-            'Key'    => 'algo/'.$database.'_backup.sql',
-            'SourceFile' => $localPath,
-            'ACL'    => 'public-read',
-        ]);
-        Log::info("Backup uploaded to Wasabi: $wasabiPath");
+            // Upload the compressed video to Wasabi
+            $result = $s3Client->putObject([
+                'Bucket' => env('WAS_BUCKET'),
+                'Key' => 'algo/' . $database . '_backup.sql',
+                'SourceFile' => $localPath,
+                'ACL' => 'public-read',
+            ]);
+            Log::info("Backup uploaded to Wasabi: $wasabiPath");
 
-        // Optional: Delete the local file after upload
-        unlink($localPath);
+            // Optional: Delete the local file after upload
+            unlink($localPath);
+        }catch (Exception $e){}
 
         // Step 3: Manage backups retention
         // $this->manageRetention($database);
