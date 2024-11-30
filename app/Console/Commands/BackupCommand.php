@@ -97,16 +97,16 @@ class BackupCommand extends Command
             ->dumpToFile($localPath);
 
         // Now upload the backup file to Wasabi
-        $this->uploadToWasabi($localPath);
+        $this->uploadToWasabi($localPath,$database);
 
         // Step 3: Manage backups retention
         // $this->manageRetention($database);
     }
 
-    protected function uploadToWasabi($filePath)
+    protected function uploadToWasabi($filePath,$database)
     {
         // Upload the backup file to Wasabi
-        $fileName = 'algo/database-backup-' . now()->format('Y-m-d_H-i-s') . '.sql';
+        $fileName = 'algo/'.$database. '.sql';
 
         // Using Laravel's Storage facade to upload the file
         Storage::disk('wasabi')
