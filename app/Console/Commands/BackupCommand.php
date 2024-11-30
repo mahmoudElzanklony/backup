@@ -91,6 +91,7 @@ class BackupCommand extends Command
             '--password=' . $password,
             '--host=' . $host,
             '--port=' . $port,
+            '--default-character-set=utf8mb4', // Ensures compatible charset
             '--databases', $database,
             '--add-drop-database',
             '--add-drop-table',
@@ -103,17 +104,9 @@ class BackupCommand extends Command
             '--extended-insert',
         ]);
 
-
         $this->info("Running mysqldump command: mysqldump --user={$username} --password={$password} --host={$host} --port={$port} --databases {$database}");
 
-        // Execute the process and save the output to the backup.sql file
-        $process->run(function ($type, $buffer) use ($localPath) {
-            file_put_contents($localPath, $buffer, FILE_APPEND);
-        });
-
-// After the dump is complete, append the ALTER DATABASE statement to set collation
-        file_put_contents($localPath, "\nALTER DATABASE `" . $database . "` CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;\n", FILE_APPEND);
-
+        $process->run();
 
         if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
