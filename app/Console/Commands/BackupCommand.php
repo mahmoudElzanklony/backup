@@ -170,7 +170,10 @@ class BackupCommand extends Command
 
             // Optional: Delete the local file after upload
             unlink($localPath);
-        }catch (Exception $e){}
+        }catch (Exception $e){
+            Log::info($e->getMessage());
+
+        }
 
         // Step 3: Manage backups retention
         // $this->manageRetention($database);
