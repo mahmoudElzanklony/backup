@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Exception;
+use Spatie\DbDumper\DbDumper;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
@@ -86,97 +87,32 @@ class BackupCommand extends Command
             return;
         }
 
-        $process = new Process([
-            'mysqldump',
-            '--user=' . $username,
-            '--password=' . $password,
-            '--host=' . $host,
-            '--port=' . $port,
-            '--default-character-set=utf8mb4', // Ensures compatible charset
-            '--databases', $database,          // Database to dump
-            '--no-create-db',                  // Don't include CREATE DATABASE statement
-            '--no-set-names',                  // Avoid setting names and charsets at the beginning
-            '--skip-comments',                 // Don't include comments
-            '--add-drop-table',                // Drop tables if they already exist
-            '--add-locks',                     // Add table locks for faster inserts
-            '--routines',                      // Include stored procedures and functions
-            '--events',                        // Include events
-            '--triggers',                      // Include triggers
-            '--complete-insert',               // Use complete insert syntax (INSERT INTO ... VALUES (...), (...))
-            '--extended-insert',               // Use extended inserts (one insert with multiple rows)
-        ]);
-        try {
-            $process->run();
+        // Create a backup file using spatie/db-dumper
 
-            if (!$process->isSuccessful()) {
-                throw new ProcessFailedException($process);
-            }
+        DbDumper::create()
+            ->setDbName($database)
+            ->setUserName($username)
+            ->setPassword($password)
+            ->dumpToFile($localPath);
 
-            // Capture the output of the mysqldump process
-            $output = $process->getOutput();
-
-            // Step 1: Add the necessary SQL modes and transaction settings at the beginning of the SQL dump
-            $output = "SET SQL_MODE = \"NO_AUTO_VALUE_ON_ZERO\";\n";
-            $output .= "START TRANSACTION;\n";
-            $output .= "SET time_zone = \"+00:00\";\n\n";
-            $output .= $process->getOutput(); // Append mysqldump output after the custom settings
-
-            // Step 2: Process the dump to move foreign keys to the end of the SQL file
-            // Regular expression to find the foreign keys and move them to the end
-            $foreignKeyPattern = '/CONSTRAINT.*?FOREIGN KEY.*?REFERENCES.*?;/s';
-            $foreignKeys = [];
-            $output = preg_replace_callback($foreignKeyPattern, function ($matches) use (&$foreignKeys) {
-                // Collect foreign keys in an array to be added later
-                $foreignKeys[] = $matches[0];
-                return ''; // Remove foreign keys from the main output
-            }, $output);
-
-            // Step 3: Append the foreign key constraints at the end of the SQL dump file
-            if (!empty($foreignKeys)) {
-                $output .= "\n-- Adding foreign keys at the end\n";
-                foreach ($foreignKeys as $fk) {
-                    $output .= $fk . "\n";
-                }
-            }
-
-            // Step 4: Save the final SQL output to a file
-            file_put_contents($localPath, $output);
-
-            // Create the database dump
-            Log::info("Backup saved locally: $localPath");
-
-
-            // Upload to Wasabi
-
-            // Set up AWS S3 Client with Wasabi credentials
-            $s3Client = new S3Client([
-                'version' => 'latest',
-                'region' => env('WAS_DEFAULT_REGION'),
-                'endpoint' => env('WAS_ENDPOINT'),
-                'credentials' => [
-                    'key' => env('WAS_ACCESS_KEY_ID'),
-                    'secret' => env('WAS_SECRET_ACCESS_KEY'),
-                ],
-            ]);
-
-            // Upload the compressed video to Wasabi
-            $result = $s3Client->putObject([
-                'Bucket' => env('WAS_BUCKET'),
-                'Key' => 'algo/' . $database . '_backup.sql',
-                'SourceFile' => $localPath,
-                'ACL' => 'public-read',
-            ]);
-            Log::info("Backup uploaded to Wasabi: $wasabiPath");
-
-            // Optional: Delete the local file after upload
-            unlink($localPath);
-        }catch (Exception $e){
-            Log::info($e->getMessage());
-
-        }
+        // Now upload the backup file to Wasabi
+        $this->uploadToWasabi($localPath);
 
         // Step 3: Manage backups retention
         // $this->manageRetention($database);
+    }
+
+    protected function uploadToWasabi($filePath)
+    {
+        // Upload the backup file to Wasabi
+        $fileName = 'algo/database-backup-' . now()->format('Y-m-d_H-i-s') . '.sql';
+
+        // Using Laravel's Storage facade to upload the file
+        Storage::disk('wasabi')
+            ->put($fileName, file_get_contents($filePath));
+
+        // Optionally, you can delete the local file after uploading
+        unlink($filePath);
     }
 
 
