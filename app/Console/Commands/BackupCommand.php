@@ -102,6 +102,7 @@ class BackupCommand extends Command
             '--disable-keys',          // Improve dump file speed with keys disabled
             '--complete-insert',       // Include complete insert syntax
             '--extended-insert',       // Combine multiple rows into one INSERT statement
+            '--set-foreign-key-checks=0', // Disable foreign key checks
         ]);
 
         $this->info("Running mysqldump command: mysqldump --user={$username} --password={$password} --host={$host} --port={$port} --databases {$database}");
