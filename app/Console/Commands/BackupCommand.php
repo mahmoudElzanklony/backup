@@ -129,7 +129,7 @@ class BackupCommand extends Command
     {
         $timestamp = now()->format('Y_m_d_His');
 
-        $fileName = 'algo/' . $database . '_backup_' . basename($filePath);
+        $fileName = 'algo/'. basename($filePath);
 
         // Using Laravel's Storage facade to upload the file
         Storage::disk('wasabi')
