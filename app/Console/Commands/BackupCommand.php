@@ -96,17 +96,49 @@ class BackupCommand extends Command
         // $this->manageRetention($database);
     }
 
-    protected function uploadToWasabi($filePath,$database)
+
+
+    protected function manageRetention($database)
     {
-        // Upload the backup file to Wasabi
-        $fileName = 'algo/'.$database. '_backup.sql';
+        $disk = Storage::disk('wasabi');
+        $folder = 'algo/'; // Folder where backups are stored
+
+        // List all files in the Wasabi folder
+        $files = $disk->files($folder);
+
+        // Filter files for the specific database
+        $databaseFiles = array_filter($files, function ($file) use ($database) {
+            return strpos($file, "algo/{$database}_backup_") === 0;
+        });
+
+        // Sort files by last modified time (ascending)
+        usort($databaseFiles, function ($fileA, $fileB) use ($disk) {
+            return $disk->lastModified($fileA) <=> $disk->lastModified($fileB);
+        });
+
+        // Retain the last 4 backups and delete the rest
+        $filesToDelete = array_slice($databaseFiles, 0, max(0, count($databaseFiles) - 12));
+
+        foreach ($filesToDelete as $file) {
+            $disk->delete($file);
+            Log::info("Deleted old backup: {$file}");
+        }
+    }
+
+    protected function uploadToWasabi($filePath, $database)
+    {
+        $timestamp = now()->format('Y_m_d_His');
+        $fileName = "algo/{$database}_backup_{$timestamp}_". basename($filePath).".sql";
 
         // Using Laravel's Storage facade to upload the file
         Storage::disk('wasabi')
             ->put($fileName, file_get_contents($filePath));
 
-        // Optionally, you can delete the local file after uploading
+        // Optionally, delete the local file after uploading
         unlink($filePath);
+
+        // Manage backups retention
+        $this->manageRetention($database);
     }
 
 
