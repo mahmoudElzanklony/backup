@@ -128,7 +128,8 @@ class BackupCommand extends Command
     protected function uploadToWasabi($filePath, $database)
     {
         $timestamp = now()->format('Y_m_d_His');
-        $fileName = "algo/{$database}_backup_{$timestamp}_". basename($filePath).".sql";
+
+        $fileName = 'algo/' . $database . '_backup_' . basename($filePath);
 
         // Using Laravel's Storage facade to upload the file
         Storage::disk('wasabi')
