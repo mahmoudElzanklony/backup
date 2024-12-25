@@ -115,7 +115,7 @@ class BackupCommand extends Command
             ->setPassword($password)
             ->dumpToFile($localPath);
 
-        dd('end to make file');
+
 
         // Now upload the backup file to Wasabi
         $this->uploadToWasabi($localPath,$database , $host_type);
@@ -134,7 +134,7 @@ class BackupCommand extends Command
         // List all files in the Wasabi folder
         $files = $disk->files($folder);
 
-
+        dd($files);
         if($host_type != ''){
             // Filter files for cluster database
             $databaseFiles = array_filter($files, function ($file) use ($database,$host_type) {
