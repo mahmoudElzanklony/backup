@@ -108,12 +108,14 @@ class BackupCommand extends Command
         }
 
         // Create a backup file using spatie/db-dumper
-        dd('start to make file');
+
         MySql::create()
             ->setDbName($database)
             ->setUserName($username)
             ->setPassword($password)
             ->dumpToFile($localPath);
+
+        dd('end to make file');
 
         // Now upload the backup file to Wasabi
         $this->uploadToWasabi($localPath,$database , $host_type);
