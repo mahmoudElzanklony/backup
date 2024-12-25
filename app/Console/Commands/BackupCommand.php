@@ -46,12 +46,14 @@ class BackupCommand extends Command
 
 
 
-
+        if(env('DB_CLUSTER_PASSWORD')){
         $this->process_databases(env('DB_CLUSTER_USERNAME'),
             env('DB_CLUSTER_PASSWORD'),
             env('DB_CLUSTER_HOST'),
             env('DB_CLUSTER_PORT'),'_cluster');
-        $this->process_databases($username,$password,$host,$port,'');
+        }else {
+            $this->process_databases($username, $password, $host, $port, '');
+        }
     }
 
 
