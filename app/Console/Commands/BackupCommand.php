@@ -73,7 +73,7 @@ class BackupCommand extends Command
 
 
         $process->run();
-        dd($process->isSuccessful());
+
         if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
         }
@@ -82,6 +82,8 @@ class BackupCommand extends Command
             // Ignore system databases
             return !in_array($db, ['Database', 'information_schema', 'performance_schema', 'mysql', 'sys']);
         });
+
+        dd($databases);
 
 
         // Step 2: Backup each database
