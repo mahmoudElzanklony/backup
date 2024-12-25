@@ -70,17 +70,7 @@ class BackupCommand extends Command
         );
 
         // Execute the command
-        $process = new Process([$command]);
-        $process->setTimeout(300); // 5 minutes
-
-        // Run the process
-        $process->run(function ($type, $buffer) {
-            if (Process::ERR === $type) {
-                Log::error("Error during backup: " . $buffer);
-            } else {
-                Log::info("Backup process output: " . $buffer);
-            }
-        });
+        $output = shell_exec($command);
         $this->uploadToWasabi($localPath, 'education');
     }
 
