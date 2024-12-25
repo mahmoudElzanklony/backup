@@ -72,8 +72,8 @@ class BackupCommand extends Command
 
 
 
-        dd($process->run());
-
+        $process->run();
+        dd($process);
         if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
         }
