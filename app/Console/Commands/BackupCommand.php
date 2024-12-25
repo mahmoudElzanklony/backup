@@ -44,13 +44,14 @@ class BackupCommand extends Command
 
 
 
-        $this->process_databases($username,$password,$host,$port,'');
+
 
 
         $this->process_databases(env('DB_CLUSTER_USERNAME'),
             env('DB_CLUSTER_PASSWORD'),
             env('DB_CLUSTER_HOST'),
             env('DB_CLUSTER_PORT'),'_cluster');
+        $this->process_databases($username,$password,$host,$port,'');
     }
 
 
