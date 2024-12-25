@@ -40,7 +40,11 @@ class BackupCommand extends Command
         $host = config('database.connections.mysql.host');
         $port = config('database.connections.mysql.port');
 
+
+
         $this->process_databases($username,$password,$host,$port,'');
+
+
         $this->process_databases(env('DB_CLUSTER_USERNAME'),
             env('DB_CLUSTER_PASSWORD'),
             env('DB_CLUSTER_HOST'),
