@@ -68,6 +68,8 @@ class BackupCommand extends Command
             '-e', 'SHOW DATABASES;'
         ]);
 
+        $process->setTimeout(120);
+
 
 
         $process->run();
@@ -106,14 +108,39 @@ class BackupCommand extends Command
             return;
         }
 
-        // Create a backup file using spatie/db-dumper
+        /*// Create a backup file using spatie/db-dumper
         MySql::create()
             ->setTimeout(300)
             ->setHost($host)
             ->setDbName($database)
             ->setUserName($username)
             ->setPassword($password)
-            ->dumpToFile($localPath);
+            ->dumpToFile($localPath);*/
+
+        // Step 1: Use mysqldump to back up the database
+        $process = new Process([
+            'mysqldump',
+            '--user=' . $username,
+            '--password=' . $password,
+            '--host=' . $host,
+            '--port=' . $port,
+            $database
+        ]);
+        $process->setTimeout(300); // 5 minutes for the backup process
+
+        // Run the process and check for success
+        $process->run(function ($type, $buffer) {
+            if (Process::ERR === $type) {
+                Log::error("Error during backup: " . $buffer);
+            } else {
+                Log::info("Backup process output: " . $buffer);
+            }
+        });
+
+        if (!$process->isSuccessful()) {
+            throw new ProcessFailedException($process);
+        }
+
 
 
 
