@@ -116,7 +116,7 @@ class BackupCommand extends Command
             ->dumpToFile($localPath);
 
 
-
+        dd($database,$host_type);
         // Now upload the backup file to Wasabi
         $this->uploadToWasabi($localPath,$database , $host_type);
 
@@ -128,7 +128,7 @@ class BackupCommand extends Command
 
     protected function manageRetention($database,$host_type = '')
     {
-        dd($database,$host_type);
+
         $disk = Storage::disk('wasabi');
         $folder = 'algo/'; // Folder where backups are stored
 
