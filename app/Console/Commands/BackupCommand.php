@@ -40,6 +40,16 @@ class BackupCommand extends Command
         $host = config('database.connections.mysql.host');
         $port = config('database.connections.mysql.port');
 
+        $this->process_databases($username,$password,$host,$port,'');
+        $this->process_databases('doadmin',
+            'AVNS_vLeHH4bjTNJEr8vwVue',
+            'db-mysql-ilearn-do-user-12747146-0.d.db.ondigitalocean.com',
+            '25060','_cluster');
+    }
+
+
+    public function process_databases($username , $password , $host , $port,$host_type = '')
+    {
 
         $process = new Process([
             'mysql',
@@ -64,15 +74,17 @@ class BackupCommand extends Command
 
         // Step 2: Backup each database
         foreach ($databases as $database) {
-            $this->backupDatabase($database, $username, $password, $host, $port);
+            $this->backupDatabase($database, $username, $password, $host, $port , $host_type);
         }
-
     }
 
-    private function backupDatabase($database, $username, $password, $host, $port)
+    private function backupDatabase($database, $username, $password, $host, $port ,$host_type = '')
     {
         $timestamp = now()->format('Y_m_d_His');
         $filename = "{$database}_backup_{$timestamp}.sql";
+        if($host_type != ''){
+            $filename = "{$database}_backup_{$host_type}_{$timestamp}.sql";
+        }
         Log::info("file name is : $filename");
         $localPath = storage_path("app/{$filename}");
         Log::info("Starting backup for database: $database");
@@ -90,7 +102,7 @@ class BackupCommand extends Command
             ->dumpToFile($localPath);
 
         // Now upload the backup file to Wasabi
-        $this->uploadToWasabi($localPath,$database);
+        $this->uploadToWasabi($localPath,$database , $host_type);
 
         // Step 3: Manage backups retention
         // $this->manageRetention($database);
@@ -98,7 +110,7 @@ class BackupCommand extends Command
 
 
 
-    protected function manageRetention($database)
+    protected function manageRetention($database,$host_type = '')
     {
         $disk = Storage::disk('wasabi');
         $folder = 'algo/'; // Folder where backups are stored
@@ -106,10 +118,18 @@ class BackupCommand extends Command
         // List all files in the Wasabi folder
         $files = $disk->files($folder);
 
-        // Filter files for the specific database
-        $databaseFiles = array_filter($files, function ($file) use ($database) {
-            return strpos($file, "algo/{$database}_backup_") === 0;
-        });
+
+        if($host_type != ''){
+            // Filter files for cluster database
+            $databaseFiles = array_filter($files, function ($file) use ($database,$host_type) {
+                return strpos($file, "algo/{$database}_backup_{$host_type}_") === 0;
+            });
+        }else{
+            // Filter files for the specific database
+            $databaseFiles = array_filter($files, function ($file) use ($database) {
+                return strpos($file, "algo/{$database}_backup_") === 0;
+            });
+        }
 
         // Sort files by last modified time (ascending)
         usort($databaseFiles, function ($fileA, $fileB) use ($disk) {
@@ -125,7 +145,7 @@ class BackupCommand extends Command
         }
     }
 
-    protected function uploadToWasabi($filePath, $database)
+    protected function uploadToWasabi($filePath, $database , $host_type = '')
     {
         $timestamp = now()->format('Y_m_d_His');
 
@@ -139,7 +159,7 @@ class BackupCommand extends Command
         unlink($filePath);
 
         // Manage backups retention
-        $this->manageRetention($database);
+        $this->manageRetention($database,$host_type);
     }
 
 
