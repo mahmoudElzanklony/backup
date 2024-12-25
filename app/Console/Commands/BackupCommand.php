@@ -56,7 +56,8 @@ class BackupCommand extends Command
 
     public function process_databases($username , $password , $host , $port,$host_type = '')
     {
-
+        $this->info('username is ...'.$username);
+        $this->info('host is ...'.$host);
         $process = new Process([
             'mysql',
             '--user=' . $username,
