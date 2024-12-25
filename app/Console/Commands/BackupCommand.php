@@ -71,47 +71,45 @@ class BackupCommand extends Command
 
         // Execute the command
         $output = shell_exec($command);
-        $this->uploadToWasabi($localPath, 'education');
+        $this->uploadToWasabi($localPath, 'education','cluster');
     }
 
     public function process_databases($username , $password , $host , $port,$host_type = '')
     {
         if($host_type != ''){
             $this->cluster_dump($username , $password , $host , $port,'education');
-        }
-        $this->info('username is ...'.$username);
-        $this->info('host is ...'.$host);
-        $process = new Process([
-            'mysql',
-            '--user=' . $username,
-            '--password=' . $password,
-            '--host=' . $host,
-            '--port=' . $port,
-            '-e', 'SHOW DATABASES;'
-        ]);
+        }else {
+            $this->info('username is ...' . $username);
+            $this->info('host is ...' . $host);
+            $process = new Process([
+                'mysql',
+                '--user=' . $username,
+                '--password=' . $password,
+                '--host=' . $host,
+                '--port=' . $port,
+                '-e', 'SHOW DATABASES;'
+            ]);
 
-        $process->setTimeout(120);
-
-
-
-        $process->run();
-
-        if (!$process->isSuccessful()) {
-            throw new ProcessFailedException($process);
-        }
-
-        $databases = array_filter(explode("\n", $process->getOutput()), function ($db) {
-            // Ignore system databases
-            return !in_array($db, ['Database', 'information_schema', 'performance_schema', 'mysql', 'sys']);
-        });
+            $process->setTimeout(120);
 
 
+            $process->run();
+
+            if (!$process->isSuccessful()) {
+                throw new ProcessFailedException($process);
+            }
+
+            $databases = array_filter(explode("\n", $process->getOutput()), function ($db) {
+                // Ignore system databases
+                return !in_array($db, ['Database', 'information_schema', 'performance_schema', 'mysql', 'sys']);
+            });
 
 
-        // Step 2: Backup each database
-        foreach ($databases as $database) {
-            Log::info("database is ==> $database");
-            $this->backupDatabase($database, $username, $password, $host, $port , $host_type);
+            // Step 2: Backup each database
+            foreach ($databases as $database) {
+                Log::info("database is ==> $database");
+                $this->backupDatabase($database, $username, $password, $host, $port, $host_type);
+            }
         }
     }
 
@@ -198,9 +196,10 @@ class BackupCommand extends Command
 
         // Optionally, delete the local file after uploading
         unlink($filePath);
-
-        // Manage backups retention
-        $this->manageRetention($database,$host_type);
+        if($host_type == ''){
+            // Manage backups retention
+            $this->manageRetention($database,$host_type);
+        }
     }
 
 
