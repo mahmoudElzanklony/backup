@@ -41,10 +41,10 @@ class BackupCommand extends Command
         $port = config('database.connections.mysql.port');
 
         $this->process_databases($username,$password,$host,$port,'');
-        $this->process_databases('doadmin',
-            'AVNS_vLeHH4bjTNJEr8vwVue',
-            'db-mysql-ilearn-do-user-12747146-0.d.db.ondigitalocean.com',
-            '25060','_cluster');
+        $this->process_databases(env('DB_CLUSTER_USERNAME'),
+            env('DB_CLUSTER_PASSWORD'),
+            env('DB_CLUSTER_HOST'),
+            env('DB_CLUSTER_PORT'),'_cluster');
     }
 
 
