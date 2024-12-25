@@ -102,6 +102,13 @@ class BackupCommand extends Command
         }
         Log::info("file name is : $filename");
         $localPath = storage_path("app/{$filename}");
+
+        // Ensure the directory exists
+        $directory = dirname($localPath);
+        if (!file_exists($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
         Log::info("Starting backup for database: $database");
         if (empty($database)) {
             Log::error("Skipping backup for empty database name.");
