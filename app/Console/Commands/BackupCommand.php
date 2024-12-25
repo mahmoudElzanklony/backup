@@ -152,7 +152,7 @@ class BackupCommand extends Command
 
 
         // Now upload the backup file to Wasabi
-        $this->uploadToWasabi($localPath,$database , $host_type);
+        //$this->uploadToWasabi($localPath,$database , $host_type);
 
         // Step 3: Manage backups retention
         // $this->manageRetention($database);
