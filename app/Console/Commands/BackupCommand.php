@@ -58,6 +58,7 @@ class BackupCommand extends Command
     {
         $localPath = storage_path('app/education_backup_cluster_'.now()->format('Y_m_d_His').'.sql');
         // Command to run mysqldump and write to education.sql
+        Log::error("start dump cluster" );
         $command = sprintf(
             'mysqldump --user=%s --password=%s --host=%s --port=%s --single-transaction %s > %s',
             escapeshellarg($username),
