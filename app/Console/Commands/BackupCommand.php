@@ -108,6 +108,7 @@ class BackupCommand extends Command
 
         // Create a backup file using spatie/db-dumper
         MySql::create()
+            ->setTimeout(300)
             ->setHost($host)
             ->setDbName($database)
             ->setUserName($username)
