@@ -86,6 +86,7 @@ class BackupCommand extends Command
 
         // Step 2: Backup each database
         foreach ($databases as $database) {
+            Log::info("database is ==> $database");
             $this->backupDatabase($database, $username, $password, $host, $port , $host_type);
         }
     }
