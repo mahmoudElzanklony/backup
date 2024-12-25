@@ -83,7 +83,7 @@ class BackupCommand extends Command
             return !in_array($db, ['Database', 'information_schema', 'performance_schema', 'mysql', 'sys']);
         });
 
-        dd($databases);
+
 
 
         // Step 2: Backup each database
@@ -108,7 +108,7 @@ class BackupCommand extends Command
         }
 
         // Create a backup file using spatie/db-dumper
-
+        dd('start to make file');
         MySql::create()
             ->setDbName($database)
             ->setUserName($username)
