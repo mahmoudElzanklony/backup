@@ -70,6 +70,8 @@ class BackupCommand extends Command
             '-e', 'SHOW DATABASES;'
         ]);
 
+        dd($process);
+
         $process->run();
 
         if (!$process->isSuccessful()) {
