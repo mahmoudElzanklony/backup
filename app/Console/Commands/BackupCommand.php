@@ -54,9 +54,40 @@ class BackupCommand extends Command
 
     }
 
+    public function cluster_dump($username, $password, $host, $port,$database)
+    {
+        $localPath = storage_path('app/education_backup_cluster_'.now()->format('Y_m_d_His').'.sql');
+        // Command to run mysqldump and write to education.sql
+        $command = sprintf(
+            'mysqldump --user=%s --password=%s --host=%s --port=%s --single-transaction %s > %s',
+            escapeshellarg($username),
+            escapeshellarg($password),
+            escapeshellarg($host),
+            escapeshellarg($port),
+            escapeshellarg($database),
+            escapeshellarg($localPath)
+        );
+
+        // Execute the command
+        $process = new Process([$command]);
+        $process->setTimeout(300); // 5 minutes
+
+        // Run the process
+        $process->run(function ($type, $buffer) {
+            if (Process::ERR === $type) {
+                Log::error("Error during backup: " . $buffer);
+            } else {
+                Log::info("Backup process output: " . $buffer);
+            }
+        });
+        $this->uploadToWasabi($localPath, 'education');
+    }
 
     public function process_databases($username , $password , $host , $port,$host_type = '')
     {
+        if($host_type != ''){
+            $this->cluster_dump($username , $password , $host , $port,'education');
+        }
         $this->info('username is ...'.$username);
         $this->info('host is ...'.$host);
         $process = new Process([
@@ -102,57 +133,25 @@ class BackupCommand extends Command
         }
         Log::info("file name is : $filename");
         $localPath = storage_path("app/{$filename}");
-
-        // Ensure the directory exists
-        $directory = dirname($localPath);
-        if (!file_exists($directory)) {
-            mkdir($directory, 0755, true);
-        }
-
         Log::info("Starting backup for database: $database");
         if (empty($database)) {
             Log::error("Skipping backup for empty database name.");
             return;
         }
 
-        /*// Create a backup file using spatie/db-dumper
+        // Create a backup file using spatie/db-dumper
         MySql::create()
             ->setTimeout(300)
             ->setHost($host)
             ->setDbName($database)
             ->setUserName($username)
             ->setPassword($password)
-            ->dumpToFile($localPath);*/
-
-        // Step 1: Use mysqldump to back up the database
-        $process = new Process([
-            'mysqldump',
-            '--user=' . $username,
-            '--password=' . $password,
-            '--host=' . $host,
-            '--port=' . $port,
-            $database
-        ]);
-        $process->setTimeout(300); // 5 minutes for the backup process
-
-        // Run the process and check for success
-        $process->run(function ($type, $buffer) {
-            if (Process::ERR === $type) {
-                Log::error("Error during backup: " . $buffer);
-            } else {
-                Log::info("Backup process output: " . $buffer);
-            }
-        });
-
-        if (!$process->isSuccessful()) {
-            throw new ProcessFailedException($process);
-        }
-
+            ->dumpToFile($localPath);
 
 
 
         // Now upload the backup file to Wasabi
-        //$this->uploadToWasabi($localPath,$database , $host_type);
+        $this->uploadToWasabi($localPath,$database , $host_type);
 
         // Step 3: Manage backups retention
         // $this->manageRetention($database);
