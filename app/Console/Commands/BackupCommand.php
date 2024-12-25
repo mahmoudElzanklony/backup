@@ -128,13 +128,14 @@ class BackupCommand extends Command
 
     protected function manageRetention($database,$host_type = '')
     {
+        dd($database,$host_type);
         $disk = Storage::disk('wasabi');
         $folder = 'algo/'; // Folder where backups are stored
 
         // List all files in the Wasabi folder
         $files = $disk->files($folder);
 
-        dd($files);
+
         if($host_type != ''){
             // Filter files for cluster database
             $databaseFiles = array_filter($files, function ($file) use ($database,$host_type) {
