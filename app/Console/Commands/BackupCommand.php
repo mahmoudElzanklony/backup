@@ -50,7 +50,7 @@ class BackupCommand extends Command
                 env('DB_CLUSTER_PORT'), '_cluster');
         }
 
-        $this->process_databases($username, $password, $host, $port, '');
+        $this->process_databases($username, $password, $host, $port, '_new_ilearn_droplet');
 
 
     }
