@@ -82,6 +82,7 @@ class BackupCommand extends Command
         }else {
             $this->info('username is ...' . $username);
             $this->info('host is ...' . $host);
+            $this->info('password is ...' . $password);
             $process = new Process([
                 'mysql',
                 '--user=' . $username,
