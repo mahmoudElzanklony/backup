@@ -82,20 +82,22 @@ class BackupCommand extends Command
         }else {
             $this->info('username is ... ' . $username);
             $this->info('host is ...' . $host);
-            $this->info('password is ...' . $password);
-            $process = new Process([
-                'mysql',
-                '--user=' . $username,
-                '--password=' . $password,
-                '--host=' . $host,
-                '--port=' . $port,
-                '-e', 'SHOW DATABASES;'
-            ]);
+            try{
+                $process = new Process([
+                    'mysql',
+                    '--user=' . $username,
+                    '--password=' . $password,
+                    '--host=' . $host,
+                    '--port=' . $port,
+                    '-e', 'SHOW DATABASES;'
+                ]);
 
-            $process->setTimeout(120);
+                $process->setTimeout(120);
 
 
-            $process->run();
+                $process->run();
+            }catch (ProcessFailedException $exception){}
+
 
             if (!$process->isSuccessful()) {
                 throw new ProcessFailedException($process);
