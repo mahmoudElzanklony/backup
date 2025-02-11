@@ -96,7 +96,9 @@ class BackupCommand extends Command
 
 
                 $process->run();
-            }catch (ProcessFailedException $exception){}
+            }catch (ProcessFailedException $exception){
+                $this->info($exception->getMessage());
+            }
 
 
             if (!$process->isSuccessful()) {
