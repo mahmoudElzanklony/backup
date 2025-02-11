@@ -80,7 +80,7 @@ class BackupCommand extends Command
         if($host_type != ''){
             $this->cluster_dump($username , $password , $host , $port,'education');
         }else {
-            $this->info('username is ...' . $username);
+            $this->info('username is ... ' . $username);
             $this->info('host is ...' . $host);
             $this->info('password is ...' . $password);
             $process = new Process([
