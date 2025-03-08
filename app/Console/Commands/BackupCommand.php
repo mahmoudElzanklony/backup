@@ -212,7 +212,7 @@ class BackupCommand extends Command
         // Upload the compressed video to Wasabi
         $result = $s3Client->putObject([
             'Bucket' => env('WAS_BUCKET'),
-            'Key'    => 'algo/'.$fileName,
+            'Key'    => env('WAS_MAIN_DB').$fileName,
             'SourceFile' => $filePath,
             'ACL'    => 'public-read',
         ]);
