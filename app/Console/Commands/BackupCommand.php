@@ -59,7 +59,7 @@ class BackupCommand extends Command
     {
         $localPath = storage_path('education_backup_cluster_'.now()->format('Y_m_d_His').'.sql');
         // Command to run mysqldump and write to education.sql
-        Log::error("start dump cluster" );
+        Log::info("start dump cluster" );
         $command = sprintf(
             'mysqldump --user=%s --password=%s --host=%s --port=%s --single-transaction %s > %s',
             escapeshellarg($username),
@@ -195,7 +195,7 @@ class BackupCommand extends Command
         $timestamp = now()->format('Y_m_d_His');
 
         $fileName = 'algo/new_ilearn_'. basename($filePath);
-
+        Log::info("file name is : $fileName");
         // Using Laravel's Storage facade to upload the file
         Storage::disk('wasabi')
             ->put($fileName, file_get_contents($filePath));
