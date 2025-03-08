@@ -198,8 +198,26 @@ class BackupCommand extends Command
         Log::info("file name is : $fileName");
         Log::info("file path is : $filePath");
         // Using Laravel's Storage facade to upload the file
-        Storage::disk('wasabi')
-            ->put($fileName, file_get_contents($filePath));
+        // Set up AWS S3 Client with Wasabi credentials
+        $s3Client = new S3Client([
+            'version' => 'latest',
+            'region'  => env('WAS_DEFAULT_REGION'),
+            'endpoint' => env('WAS_ENDPOINT'),
+            'credentials' => [
+                'key'    => env('WAS_ACCESS_KEY_ID'),
+                'secret' => env('WAS_SECRET_ACCESS_KEY'),
+            ],
+        ]);
+
+        // Upload the compressed video to Wasabi
+        $result = $s3Client->putObject([
+            'Bucket' => env('WAS_BUCKET'),
+            'Key'    => $filePath,
+            'SourceFile' => $filePath,
+            'ACL'    => 'public-read',
+        ]);
+        /*Storage::disk('wasabi')
+            ->put($fileName, file_get_contents($filePath));*/
 
         // Optionally, delete the local file after uploading
         //unlink($filePath);
