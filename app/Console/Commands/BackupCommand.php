@@ -196,12 +196,13 @@ class BackupCommand extends Command
 
         $fileName = 'algo/new_ilearn_'. basename($filePath);
         Log::info("file name is : $fileName");
+        Log::info("file path is : $filePath");
         // Using Laravel's Storage facade to upload the file
         Storage::disk('wasabi')
             ->put($fileName, file_get_contents($filePath));
 
         // Optionally, delete the local file after uploading
-        unlink($filePath);
+        //unlink($filePath);
         if($host_type == ''){
             // Manage backups retention
             $this->manageRetention($database,$host_type);
