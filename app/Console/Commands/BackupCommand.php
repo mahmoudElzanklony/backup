@@ -180,7 +180,7 @@ class BackupCommand extends Command
 
         $s3Client->putObject([
             'Bucket' => env('WAS_BUCKET'),
-            'Key' => env('WAS_MAIN_DB') . $fileName,
+            'Key' => $fileName,
             'SourceFile' => $filePath,
             'ACL' => 'public-read',
         ]);
