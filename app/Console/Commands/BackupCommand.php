@@ -120,7 +120,7 @@ class BackupCommand extends Command
 
         $localPath = storage_path("app/{$filename}");
 
-        $this->info(' Password: ' . $password);
+        $this->info('Username : ' . $username.' Password: ' . $password . ' Database Name: ' . $database .' Host: ' . $host);
 
         MySql::create()
             ->setTimeout(300)
