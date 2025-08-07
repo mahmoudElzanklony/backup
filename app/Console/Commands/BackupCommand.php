@@ -30,12 +30,12 @@ class BackupCommand extends Command
         $port = config('database.connections.mysql.port');
 
         if(env('IS_ILEARN')){
-            $this->folder = 'education/';
+            $this->folder = 'ilearn/';
         }
 
         // Cluster backup
         if (env('DB_CLUSTER_USERNAME')) {
-            $this->folder = 'education/';
+            $this->folder = 'ilearn/';
             $this->processDatabases(
                 env('DB_CLUSTER_USERNAME'),
                 env('DB_CLUSTER_PASSWORD'),
