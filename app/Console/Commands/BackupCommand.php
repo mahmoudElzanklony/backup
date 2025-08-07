@@ -130,6 +130,7 @@ class BackupCommand extends Command
             '--protocol=TCP',
             '--single-transaction',
             '--skip-set-charset',
+            '--no-tablespaces',
             $database,
         ];
 
@@ -142,11 +143,9 @@ class BackupCommand extends Command
         if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
         }
-        $dump = file_get_contents($process->getOutput());
-        $dump = str_replace('utf8mb4_0900_ai_ci', 'utf8mb4_general_ci', $dump);
-        file_put_contents($localPath, $dump);
-        // Save output to file
 
+        // Save output to file
+        file_put_contents($localPath, $process->getOutput());
 
 
         /*MySql::create()
