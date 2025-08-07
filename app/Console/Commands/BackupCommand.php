@@ -129,8 +129,7 @@ class BackupCommand extends Command
             "--password={$password}",
             '--protocol=TCP',
             '--single-transaction',
-            '--skip-set-charset',
-            '--no-tablespaces',
+            '-compatible=mysql57',
             $database,
         ];
 
