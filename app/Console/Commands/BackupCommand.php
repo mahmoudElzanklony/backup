@@ -120,7 +120,6 @@ class BackupCommand extends Command
 
         $localPath = storage_path("app/{$filename}");
 
-        Log::info("Backing up database: $database to file: $filename");
 
         MySql::create()
             ->setTimeout(300)
@@ -129,7 +128,8 @@ class BackupCommand extends Command
             ->setUserName($username)
             ->setPassword($password)
             ->dumpToFile($localPath);
-
+        $this->info('Username : ' . $username, ' Password: ' . $password . ' Database Name: ' . $database .' Host: ' . $host);
+        $this->info('start sending to wasabi');
         $this->uploadToWasabi($localPath, $database, $hostType);
     }
 
