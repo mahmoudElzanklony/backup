@@ -128,7 +128,7 @@ class BackupCommand extends Command
 
     protected function uploadToWasabi(string $filePath, string $database, string $hostType = '')
     {
-        $fileName = $this->folder . 'new_ilearn_' . basename($filePath);
+        $fileName = $this->folder . '_database_' . basename($filePath);
 
         Log::info("Uploading $fileName to Wasabi from $filePath");
 
