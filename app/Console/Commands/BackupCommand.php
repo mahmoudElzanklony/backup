@@ -122,7 +122,35 @@ class BackupCommand extends Command
 
         $this->info('Username : ' . $username.' Password: ' . $password . ' Database Name: ' . $database .' Host: ' . $host);
 
-        MySql::create()
+        $command = [
+            'mysqldump',
+            "--host={$host}",
+            "--port={$port}",
+            "--user={$username}",
+            "--password={$password}",
+            '--protocol=TCP',
+            '--single-transaction',
+            $database,
+        ];
+
+        $process = new Process($command);
+        $process->run(function ($type, $buffer) {
+            if (Process::ERR === $type) {
+                echo 'ERR > ' . $buffer;
+            } else {
+                echo 'OUT > ' . $buffer;
+            }
+        });
+
+        if (!$process->isSuccessful()) {
+            throw new ProcessFailedException($process);
+        }
+
+        // Save output to file
+        file_put_contents($localPath, $process->getOutput());
+
+
+        /*MySql::create()
             ->setDbName($database)
             ->setUserName($username)
             ->setPassword($password)
@@ -130,7 +158,7 @@ class BackupCommand extends Command
             ->setPort((int)$port)
             ->useSingleTransaction()
             ->addExtraOption('--protocol=TCP')
-            ->dumpToFile($localPath);
+            ->dumpToFile($localPath);*/
         $this->info('start sending to wasabi');
         $this->uploadToWasabi($localPath, $database, $hostType);
     }
