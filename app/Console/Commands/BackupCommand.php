@@ -28,6 +28,10 @@ class BackupCommand extends Command
         $host = config('database.connections.mysql.host');
         $port = config('database.connections.mysql.port');
 
+        if(env('IS_ILEARN')){
+            $this->folder = 'ilearnalgo/';
+        }
+
         // Cluster backup
         if (env('DB_CLUSTER_USERNAME')) {
             $this->folder = 'ilearnalgo/';
