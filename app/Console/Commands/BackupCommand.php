@@ -129,6 +129,7 @@ class BackupCommand extends Command
             "--password={$password}",
             '--protocol=TCP',
             '--single-transaction',
+            '--skip-set-charset',
             $database,
         ];
 
