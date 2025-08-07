@@ -7,60 +7,86 @@ use Aws\S3\S3Client;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use PHPUnit\Exception;
 use Spatie\DbDumper\Databases\MySql;
-use Spatie\DbDumper\DbDumper;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
 class BackupCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'backup';
-    private $folder = 'algo/';
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Command description';
+    protected $description = 'Backup MySQL databases and upload to Wasabi';
 
-    /**
-     * Execute the console command.
-     */
+    private string $folder = 'algo/';
+    private int $retentionLimit = 6;
+
     public function handle()
     {
         $this->info('Starting the database backup process...');
+
         $username = config('database.connections.mysql.username');
         $password = env('DB_PASSWORD');
         $host = config('database.connections.mysql.host');
         $port = config('database.connections.mysql.port');
 
-
-
-
-        if(env('DB_CLUSTER_USERNAME')) {
-            $this->folder = '/ilearnalgo';
-            $this->process_databases(env('DB_CLUSTER_USERNAME'),
+        // Cluster backup
+        if (env('DB_CLUSTER_USERNAME')) {
+            $this->folder = 'ilearnalgo/';
+            $this->processDatabases(
+                env('DB_CLUSTER_USERNAME'),
                 env('DB_CLUSTER_PASSWORD'),
                 env('DB_CLUSTER_HOST'),
-                env('DB_CLUSTER_PORT'), '_cluster');
+                env('DB_CLUSTER_PORT'),
+                '_cluster'
+            );
         }
 
-        $this->process_databases($username, $password, $host, $port, '_new_ilearn_droplet');
-
-
+        // Local backup
+        $this->processDatabases($username, $password, $host, $port, '_new_ilearn_droplet');
     }
 
-    public function cluster_dump($username, $password, $host, $port,$database)
+    protected function processDatabases(string $username, string $password, string $host, string $port, string $hostType = '')
     {
-        $localPath = storage_path('education_backup_cluster_'.now()->format('Y_m_d_His').'.sql');
-        // Command to run mysqldump and write to education.sql
-        Log::info("start dump cluster" );
+        if ($hostType !== '') {
+            $this->clusterDump($username, $password, $host, $port, 'education', $hostType);
+            return;
+        }
+
+        try {
+            $process = new Process([
+                'mysql',
+                "--user=$username",
+                "--password=$password",
+                "--host=$host",
+                "--port=$port",
+                '-e', 'SHOW DATABASES;',
+            ]);
+
+            $process->setTimeout(120);
+            $process->run();
+
+            if (!$process->isSuccessful()) {
+                throw new ProcessFailedException($process);
+            }
+
+            $databases = array_filter(explode("\n", $process->getOutput()), function ($db) {
+                return !in_array($db, ['Database', 'information_schema', 'performance_schema', 'mysql', 'sys']);
+            });
+
+            foreach ($databases as $database) {
+                $this->backupDatabase($database, $username, $password, $host, $port, $hostType);
+            }
+
+        } catch (\Exception $e) {
+            $this->error("Failed to fetch databases: " . $e->getMessage());
+        }
+    }
+
+    protected function clusterDump(string $username, string $password, string $host, string $port, string $database, string $hostType)
+    {
+        $localPath = storage_path("education_backup_cluster_" . now()->format('Y_m_d_His') . ".sql");
+
+        Log::info("Start dumping cluster database: $database");
+
         $command = sprintf(
             'mysqldump --user=%s --password=%s --host=%s --port=%s --single-transaction %s > %s',
             escapeshellarg($username),
@@ -71,71 +97,24 @@ class BackupCommand extends Command
             escapeshellarg($localPath)
         );
 
-        // Execute the command
-        $output = shell_exec($command);
-        $this->uploadToWasabi($localPath, 'education','cluster');
+        shell_exec($command);
+
+        $this->uploadToWasabi($localPath, $database, $hostType);
     }
 
-    public function process_databases($username , $password , $host , $port,$host_type = '')
+    protected function backupDatabase(string $database, string $username, string $password, string $host, string $port, string $hostType = '')
     {
-        if($host_type != ''){
-            $this->cluster_dump($username , $password , $host , $port,'education');
-        }else {
-            $this->info('username is ... ' . $username);
-            $this->info('host is ...' . $host);
-            try{
-                $process = new Process([
-                    'mysql',
-                    '--user=' . $username,
-                    '--password=' . $password,
-                    '--host=' . $host,
-                    '--port=' . $port,
-                    '-e', 'SHOW DATABASES;'
-                ]);
-
-                $process->setTimeout(120);
-
-
-                $process->run();
-            }catch (ProcessFailedException $exception){
-                $this->info($exception->getMessage());
-            }
-
-
-            if (!$process->isSuccessful()) {
-                throw new ProcessFailedException($process);
-            }
-
-            $databases = array_filter(explode("\n", $process->getOutput()), function ($db) {
-                // Ignore system databases
-                return !in_array($db, ['Database', 'information_schema', 'performance_schema', 'mysql', 'sys']);
-            });
-
-
-            // Step 2: Backup each database
-            foreach ($databases as $database) {
-                Log::info("database is ==> $database");
-                $this->backupDatabase($database, $username, $password, $host, $port, $host_type);
-            }
-        }
-    }
-
-    private function backupDatabase($database, $username, $password, $host, $port ,$host_type = '')
-    {
-        $timestamp = now()->format('Y_m_d_His');
-        $filename = "{$database}_backup_{$timestamp}.sql";
-        if($host_type != ''){
-            $filename = "{$database}_backup_{$host_type}_{$timestamp}.sql";
-        }
-        Log::info("file name is : $filename");
-        $localPath = storage_path("app/{$filename}");
-        Log::info("Starting backup for database: $database");
         if (empty($database)) {
             Log::error("Skipping backup for empty database name.");
             return;
         }
 
-        // Create a backup file using spatie/db-dumper
+        $timestamp = now()->format('Y_m_d_His');
+        $filename = "{$database}_backup{$hostType}_{$timestamp}.sql";
+        $localPath = storage_path("app/{$filename}");
+
+        Log::info("Backing up database: $database to file: $filename");
+
         MySql::create()
             ->setTimeout(300)
             ->setHost($host)
@@ -144,88 +123,56 @@ class BackupCommand extends Command
             ->setPassword($password)
             ->dumpToFile($localPath);
 
-
-
-        // Now upload the backup file to Wasabi
-        $this->uploadToWasabi($localPath,$database , $host_type);
-
-        // Step 3: Manage backups retention
-         $this->manageRetention($database);
+        $this->uploadToWasabi($localPath, $database, $hostType);
     }
 
-
-
-    protected function manageRetention($database,$host_type = '')
+    protected function uploadToWasabi(string $filePath, string $database, string $hostType = '')
     {
+        $fileName = $this->folder . 'new_ilearn_' . basename($filePath);
 
+        Log::info("Uploading $fileName to Wasabi from $filePath");
+
+        $s3Client = new S3Client([
+            'version' => 'latest',
+            'region' => env('WAS_DEFAULT_REGION'),
+            'endpoint' => env('WAS_ENDPOINT'),
+            'credentials' => [
+                'key' => env('WAS_ACCESS_KEY_ID'),
+                'secret' => env('WAS_SECRET_ACCESS_KEY'),
+            ],
+        ]);
+
+        $s3Client->putObject([
+            'Bucket' => env('WAS_BUCKET'),
+            'Key' => env('WAS_MAIN_DB') . $fileName,
+            'SourceFile' => $filePath,
+            'ACL' => 'public-read',
+        ]);
+
+        unlink($filePath);
+
+        // Retention management
+        $this->manageRetention($database, $hostType);
+    }
+
+    protected function manageRetention(string $database, string $hostType = '')
+    {
         $disk = Storage::disk('wasabi');
+        $prefix = $this->folder . $database . '_backup' . $hostType . '_';
 
-        // List all files in the Wasabi folder
-        $files = $disk->files($this->folder);
-
-
-        if($host_type != ''){
-            // Filter files for cluster database
-            $databaseFiles = array_filter($files, function ($file) use ($database,$host_type) {
-                return strpos($file, "algo/{$database}_backup_{$host_type}_") === 0;
-            });
-        }else{
-            // Filter files for the specific database
-            $databaseFiles = array_filter($files, function ($file) use ($database) {
-                return strpos($file, "algo/{$database}_backup_") === 0;
-            });
-        }
-
-        // Sort files by last modified time (ascending)
-        usort($databaseFiles, function ($fileA, $fileB) use ($disk) {
-            return $disk->lastModified($fileA) <=> $disk->lastModified($fileB);
+        $files = array_filter($disk->files($this->folder), function ($file) use ($prefix) {
+            return str_starts_with($file, $prefix);
         });
 
-        // Retain the last 4 backups and delete the rest
-        $filesToDelete = array_slice($databaseFiles, 0, max(0, count($databaseFiles) - 12));
+        usort($files, function ($a, $b) use ($disk) {
+            return $disk->lastModified($a) <=> $disk->lastModified($b);
+        });
+
+        $filesToDelete = array_slice($files, 0, max(0, count($files) - $this->retentionLimit));
 
         foreach ($filesToDelete as $file) {
             $disk->delete($file);
             Log::info("Deleted old backup: {$file}");
         }
     }
-
-    protected function uploadToWasabi($filePath, $database , $host_type = '')
-    {
-        $timestamp = now()->format('Y_m_d_His');
-
-        $fileName = 'algo/new_ilearn_'. basename($filePath);
-        Log::info("file name is : $fileName");
-        Log::info("file path is : $filePath");
-        // Using Laravel's Storage facade to upload the file
-        // Set up AWS S3 Client with Wasabi credentials
-        $s3Client = new S3Client([
-            'version' => 'latest',
-            'region'  => env('WAS_DEFAULT_REGION'),
-            'endpoint' => env('WAS_ENDPOINT'),
-            'credentials' => [
-                'key'    => env('WAS_ACCESS_KEY_ID'),
-                'secret' => env('WAS_SECRET_ACCESS_KEY'),
-            ],
-        ]);
-
-        // Upload the compressed video to Wasabi
-        $result = $s3Client->putObject([
-            'Bucket' => env('WAS_BUCKET'),
-            'Key'    => env('WAS_MAIN_DB').$fileName,
-            'SourceFile' => $filePath,
-            'ACL'    => 'public-read',
-        ]);
-        /*Storage::disk('wasabi')
-            ->put($fileName, file_get_contents($filePath));*/
-
-        // Optionally, delete the local file after uploading
-        unlink($filePath);
-        if($host_type == ''){
-            // Manage backups retention
-            $this->manageRetention($database,$host_type);
-        }
-    }
-
-
 }
