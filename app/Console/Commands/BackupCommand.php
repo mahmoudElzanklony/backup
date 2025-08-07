@@ -195,7 +195,7 @@ class BackupCommand extends Command
     protected function manageRetention(string $database, string $hostType = '')
     {
         $disk = Storage::disk('wasabi');
-        $prefix = $this->folder . $database . '_backup' . $hostType . '_';
+        $prefix = $this->folder . '_database_' . $database . '_backup';
 
         $files = array_filter($disk->files($this->folder), function ($file) use ($prefix) {
             return str_starts_with($file, $prefix);
