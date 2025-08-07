@@ -79,7 +79,6 @@ class BackupCommand extends Command
                 return !in_array($db, ['Database', 'information_schema', 'performance_schema', 'mysql', 'sys','phpmyadmin']);
             });
 
-            dd($databases);
             foreach ($databases as $database) {
                 $this->backupDatabase($database, $username, $password, $host, $port, $hostType);
             }
@@ -93,7 +92,6 @@ class BackupCommand extends Command
     {
         $localPath = storage_path("education_backup_cluster_" . now()->format('Y_m_d_His') . ".sql");
 
-        Log::info("Start dumping cluster database: $database");
 
         $command = sprintf(
             'mysqldump --user=%s --password=%s --host=%s --port=%s --single-transaction %s > %s',
