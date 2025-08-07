@@ -18,7 +18,7 @@ class BackupCommand extends Command
     protected $description = 'Backup MySQL databases and upload to Wasabi';
 
     private string $folder = 'algo/';
-    private int $retentionLimit = 6;
+    private int $retentionLimit = 15;
 
     public function handle()
     {
