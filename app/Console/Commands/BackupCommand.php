@@ -137,7 +137,7 @@ class BackupCommand extends Command
     {
         $fileName = $this->folder . '_database_' . basename($filePath);
 
-        Log::info("Uploading $fileName to Wasabi from $filePath");
+        $this->info("Uploading $fileName to Wasabi from $filePath");
 
         $s3Client = new S3Client([
             'version' => 'latest',
@@ -179,7 +179,7 @@ class BackupCommand extends Command
 
         foreach ($filesToDelete as $file) {
             $disk->delete($file);
-            Log::info("Deleted old backup: {$file}");
+            $this->info("Deleted old backup: {$file}");
         }
     }
 }
