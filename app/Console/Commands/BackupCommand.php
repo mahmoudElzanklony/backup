@@ -41,7 +41,7 @@ class BackupCommand extends Command
         }
 
         // Local backup
-        $this->processDatabases($username, $password, $host, $port, '_new_ilearn_droplet');
+        $this->processDatabases($username, $password, $host, $port);
     }
 
     protected function processDatabases(string $username, string $password, string $host, string $port, string $hostType = '')
