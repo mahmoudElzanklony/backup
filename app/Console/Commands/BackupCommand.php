@@ -76,7 +76,7 @@ class BackupCommand extends Command
 
             $this->info('Starting get all databases...');
             $databases = array_filter(explode("\n", $process->getOutput()), function ($db) {
-                return !in_array($db, ['Database', 'information_schema', 'performance_schema', 'mysql', 'sys']);
+                return !in_array($db, ['Database', 'information_schema', 'performance_schema', 'mysql', 'sys','phpmyadmin']);
             });
 
             dd($databases);
