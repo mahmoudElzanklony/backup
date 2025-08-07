@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Jobs\BackupJob;
 use Aws\S3\S3Client;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Spatie\DbDumper\Databases\MySql;
@@ -72,11 +73,13 @@ class BackupCommand extends Command
             if (!$process->isSuccessful()) {
                 throw new ProcessFailedException($process);
             }
+
             $this->info('Starting get all databases...');
             $databases = array_filter(explode("\n", $process->getOutput()), function ($db) {
                 return !in_array($db, ['Database', 'information_schema', 'performance_schema', 'mysql', 'sys']);
             });
 
+            dd($databases);
             foreach ($databases as $database) {
                 $this->backupDatabase($database, $username, $password, $host, $port, $hostType);
             }
@@ -185,8 +188,9 @@ class BackupCommand extends Command
             'SourceFile' => $filePath,
             'ACL' => 'public-read',
         ]);
+        // delete all files backup .sql
+        File::cleanDirectory('storage/app');
 
-        unlink($filePath);
 
         // Retention management
         $this->manageRetention($database, $hostType);
