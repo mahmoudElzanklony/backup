@@ -116,6 +116,8 @@ class BackupCommand extends Command
 
         $timestamp = now()->format('Y_m_d_His');
         $filename = "{$database}_backup{$hostType}_{$timestamp}.sql";
+        $this->info('file name generated: ' . $filename);
+
         $localPath = storage_path("app/{$filename}");
 
         Log::info("Backing up database: $database to file: $filename");
