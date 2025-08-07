@@ -130,6 +130,7 @@ class BackupCommand extends Command
             '--protocol=TCP',
             '--single-transaction',
             '--skip-add-drop-table',
+            '--skip-set-charset',
             $database,
         ];
 
