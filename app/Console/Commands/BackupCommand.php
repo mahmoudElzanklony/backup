@@ -133,12 +133,9 @@ class BackupCommand extends Command
         ];
 
         $process = new Process($command);
+        $process->setTimeout(300);
         $process->run(function ($type, $buffer) {
-            if (Process::ERR === $type) {
-                echo 'ERR > ' . $buffer;
-            } else {
-                echo 'OUT > ' . $buffer;
-            }
+
         });
 
         if (!$process->isSuccessful()) {
