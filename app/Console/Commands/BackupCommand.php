@@ -56,6 +56,7 @@ class BackupCommand extends Command
         }
 
         try {
+            $this->info('Starting initial database process...');
             $process = new Process([
                 'mysql',
                 "--user=$username",
@@ -71,7 +72,7 @@ class BackupCommand extends Command
             if (!$process->isSuccessful()) {
                 throw new ProcessFailedException($process);
             }
-
+            $this->info('Starting get all databases...');
             $databases = array_filter(explode("\n", $process->getOutput()), function ($db) {
                 return !in_array($db, ['Database', 'information_schema', 'performance_schema', 'mysql', 'sys']);
             });
