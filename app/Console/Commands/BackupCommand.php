@@ -147,7 +147,7 @@ class BackupCommand extends Command
 
         // Save output to file
         file_put_contents($localPath, $process->getOutput());
-        $command = ['sed', '-i', 's/utf8mb4_0900_ai_ci/utf8mb4_unicode_ci/g', $localPath];
+        $this->updateSqlDumpCollation($localPath);
 
         /*MySql::create()
             ->setDbName($database)
@@ -210,6 +210,20 @@ class BackupCommand extends Command
         foreach ($filesToDelete as $file) {
             $disk->delete($file);
             $this->info("Deleted old backup: {$file}");
+        }
+    }
+
+    public function updateSqlDumpCollation(string $dumpFile)
+    {
+        $command = ['sed', '-i', 's/utf8mb4_0900_ai_ci/utf8mb4_unicode_ci/g', $dumpFile];
+
+        $process = new Process($command);
+
+        try {
+            $process->mustRun();
+            echo 'Collation updated successfully.';
+        } catch (ProcessFailedException $exception) {
+            echo 'Collation update failed: ' . $exception->getMessage();
         }
     }
 }
