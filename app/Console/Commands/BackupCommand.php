@@ -220,7 +220,7 @@ class BackupCommand extends Command
             ->put($fileName, file_get_contents($filePath));*/
 
         // Optionally, delete the local file after uploading
-        //unlink($filePath);
+        unlink($filePath);
         if($host_type == ''){
             // Manage backups retention
             $this->manageRetention($database,$host_type);
