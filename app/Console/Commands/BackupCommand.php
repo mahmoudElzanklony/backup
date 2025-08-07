@@ -21,7 +21,7 @@ class BackupCommand extends Command
      * @var string
      */
     protected $signature = 'backup';
-
+    private $folder = 'algo/';
     /**
      * The console command description.
      *
@@ -44,6 +44,7 @@ class BackupCommand extends Command
 
 
         if(env('DB_CLUSTER_USERNAME')) {
+            $this->folder = '/ilearnalgo';
             $this->process_databases(env('DB_CLUSTER_USERNAME'),
                 env('DB_CLUSTER_PASSWORD'),
                 env('DB_CLUSTER_HOST'),
@@ -149,7 +150,7 @@ class BackupCommand extends Command
         $this->uploadToWasabi($localPath,$database , $host_type);
 
         // Step 3: Manage backups retention
-        // $this->manageRetention($database);
+         $this->manageRetention($database);
     }
 
 
@@ -158,10 +159,9 @@ class BackupCommand extends Command
     {
 
         $disk = Storage::disk('wasabi');
-        $folder = 'algo/'; // Folder where backups are stored
 
         // List all files in the Wasabi folder
-        $files = $disk->files($folder);
+        $files = $disk->files($this->folder);
 
 
         if($host_type != ''){
