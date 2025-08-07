@@ -123,11 +123,13 @@ class BackupCommand extends Command
         $this->info('Username : ' . $username.' Password: ' . $password . ' Database Name: ' . $database .' Host: ' . $host);
 
         MySql::create()
-            ->setTimeout(300)
-            ->setHost($host)
             ->setDbName($database)
             ->setUserName($username)
             ->setPassword($password)
+            ->setHost($host)
+            ->setPort((int)$port)
+            ->useSingleTransaction()
+            ->addExtraOption('--protocol=TCP')
             ->dumpToFile($localPath);
         $this->info('start sending to wasabi');
         $this->uploadToWasabi($localPath, $database, $hostType);
