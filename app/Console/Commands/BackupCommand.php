@@ -121,6 +121,7 @@ class BackupCommand extends Command
 
         $localPath = storage_path("app/{$filename}");
 
+
         $command = [
             'mysqldump',
             "--host={$host}",
@@ -146,7 +147,7 @@ class BackupCommand extends Command
 
         // Save output to file
         file_put_contents($localPath, $process->getOutput());
-
+        $command = ['sed', '-i', 's/utf8mb4_0900_ai_ci/utf8mb4_unicode_ci/g', $localPath];
 
         /*MySql::create()
             ->setDbName($database)
