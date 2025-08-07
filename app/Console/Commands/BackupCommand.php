@@ -200,13 +200,14 @@ class BackupCommand extends Command
         $files = array_filter($disk->files($this->folder), function ($file) use ($prefix) {
             return str_starts_with($file, $prefix);
         });
+        $this->info('Files inside '.$this->folder . ' = '.sizeof($files));
 
         usort($files, function ($a, $b) use ($disk) {
             return $disk->lastModified($a) <=> $disk->lastModified($b);
         });
 
         $filesToDelete = array_slice($files, 0, max(0, count($files) - $this->retentionLimit));
-
+        $this->info('Files should be deleted  '.sizeof($filesToDelete));
         foreach ($filesToDelete as $file) {
             $disk->delete($file);
             $this->info("Deleted old backup: {$file}");
